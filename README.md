@@ -1,105 +1,147 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+<h1 align="center">MeetCMU</h1>
 
 <p align="center">
- The fastest way to build apps with Next.js and Supabase
+ Propose, discover, and join casual events with CMU students
 </p>
 
 <p align="center">
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
+  <a href="#getting-started"><strong>Getting Started</strong></a> ·
+  <a href="#database-setup"><strong>Database Setup</strong></a> ·
+  <a href="#tech-stack"><strong>Tech Stack</strong></a>
 </p>
 <br/>
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+**Core Functionality:**
+- 🟡 **Tentative Events** - Post event ideas to gauge student interest before committing
+- 🟢 **Official Events** - Convert popular tentative events to official or post directly as official
+- 👥 **Prospect & Attendee Tracking** - See who's interested in tentative events and who's attending official ones
+- 🔔 **Smart Notifications** - Prospects get notified when events become official
+- 🏷️ **Event Tags** - Filter by categories like sports, study, food, gaming, etc.
+- 👤 **User Profiles** - Track hosted events, interested events, and attending events
 
-## Demo
+**Technical Features:**
+- Built with [Next.js 15](https://nextjs.org) App Router
+- [Supabase](https://supabase.com) for authentication and database
+- [Tailwind CSS](https://tailwindcss.com) for styling
+- [shadcn/ui](https://ui.shadcn.com/) components
+- Row Level Security (RLS) policies for data protection
+- Server-side rendering for optimal performance
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+## Getting Started
 
-## Deploy to Vercel
+### Prerequisites
 
-Vercel deployment will guide you through creating a Supabase account and project.
+- Node.js 18+ installed
+- A Supabase account ([create one here](https://database.new))
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+### Installation
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
-
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
-
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
-
-## Clone and run locally
-
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
-
+1. **Clone the repository**
    ```bash
-   npx create-next-app --example with-supabase with-supabase-app
+   git clone <your-repo-url>
+   cd meetcmu
    ```
 
+2. **Install dependencies**
    ```bash
-   yarn create next-app --example with-supabase with-supabase-app
+   npm install
    ```
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
+3. **Set up environment variables**
+   
+   Create a `.env.local` file in the root directory:
    ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd with-supabase-app
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
+   
+   You can find these values in your [Supabase project settings](https://supabase.com/dashboard/project/_/settings/api).
 
-4. Rename `.env.example` to `.env.local` and update the following:
+4. **Set up the database**
+   
+   Run the SQL schema in your Supabase project:
+   - Go to the SQL Editor in your Supabase dashboard
+   - Copy and paste the contents of `supabase/schema.sql`
+   - Execute the query
+   
+   This will create:
+   - `profiles` table (user information)
+   - `events` table (event data)
+   - `event_prospects` table (tentative event interest)
+   - `event_attendees` table (official event attendance)
+   - `notifications` table (user notifications)
+   - Row Level Security policies
+   - Automatic triggers for profile creation
 
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
-
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
-
-5. You can now run the Next.js local development server:
-
+5. **Run the development server**
    ```bash
    npm run dev
    ```
+   
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+## Database Setup
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+The database schema includes:
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+- **Row Level Security (RLS)** enabled on all tables
+- **Automatic profile creation** when users sign up
+- **Cascading deletes** to maintain data integrity
+- **Indexes** for optimized query performance
 
-## Feedback and issues
+Key policies:
+- Users can view all public events
+- Users can only create/edit/delete their own events
+- Users can add/remove themselves as prospects or attendees
+- Users can only view their own notifications
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+## Tech Stack
 
-## More Supabase examples
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript
+- **Database:** Supabase (PostgreSQL)
+- **Authentication:** Supabase Auth
+- **Styling:** Tailwind CSS
+- **UI Components:** shadcn/ui (Radix UI primitives)
+- **Icons:** Lucide React
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+## Project Structure
+
+```
+meetcmu/
+├── app/
+│   ├── (main)/              # Main app routes (requires auth)
+│   │   ├── events/
+│   │   │   ├── [id]/       # Event detail page
+│   │   │   └── new/        # Create event page
+│   │   ├── profile/        # User profile page
+│   │   └── page.tsx        # Home/Feed page
+│   ├── auth/               # Authentication pages
+│   └── page.tsx            # Landing page
+├── components/
+│   ├── events/             # Event-related components
+│   └── ui/                 # shadcn/ui components
+├── lib/
+│   ├── supabase/           # Supabase client utilities
+│   └── types/              # TypeScript type definitions
+└── supabase/
+    └── schema.sql          # Database schema
+```
+
+## Features to Implement (Future)
+
+- [ ] Real-time updates using Supabase Realtime
+- [ ] Push notifications for mobile
+- [ ] Event comments/discussion
+- [ ] Image uploads for events
+- [ ] Calendar integration
+- [ ] Search functionality
+- [ ] Event categories and advanced filtering
+- [ ] Direct messaging between users
+
+## License
+
+MIT
