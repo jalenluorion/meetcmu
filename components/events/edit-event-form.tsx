@@ -50,6 +50,13 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
     visibility: initialEvent.visibility,
   });
 
+  // Helper function to generate 25live booking URL for location
+  const get25LiveUrl = (location: string): string => {
+    if (!location.trim()) return '';
+    const encodedLocation = encodeURIComponent(location.trim());
+    return `https://25live.collegenet.com/pro/cmu#!/home/search/location/list/&name=${encodedLocation}`;
+  };
+
   const handleTagToggle = (tag: string) => {
     setFormData(prev => ({
       ...prev,
@@ -154,7 +161,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
               <Label htmlFor="title">Event Title *</Label>
               <Input
                 id="title"
-                placeholder="e.g., Pickup Basketball at Gesling"
+                placeholder="e.g., Niners vs Steelers Watch Party"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
@@ -204,10 +211,24 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
               <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
-                placeholder="e.g., Gesling Stadium"
+                placeholder="e.g., Margaret Morrison Commons"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               />
+              {formData.location && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium">Note:</span> It&apos;s your responsibility as the host to book any relevant rooms on{" "}
+                  <a
+                    href={get25LiveUrl(formData.location)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    CMU&apos;s 25Live service
+                  </a>{" "}
+                  to avoid scheduling conflicts.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

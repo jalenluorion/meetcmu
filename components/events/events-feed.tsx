@@ -48,10 +48,20 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
 
     // Check time range filter
     if (timeRange && event.date_time) {
-      const eventDate = new Date(event.date_time);
-      const eventHour = eventDate.getHours();
+      const eventStart = new Date(event.date_time);
+      const eventStartHour = eventStart.getHours();
 
-      return eventHour >= timeRange.startHour && eventHour < timeRange.endHour;
+      // If event has no end time, check if start time is within range
+      if (!event.end_time) {
+        return eventStartHour >= timeRange.startHour && eventStartHour < timeRange.endHour;
+      }
+
+      // If event has end time, check for any overlap with the time window
+      const eventEnd = new Date(event.end_time);
+      const eventEndHour = eventEnd.getHours();
+
+      // Event overlaps with window if: event starts before window ends AND event ends after window starts
+      return eventStartHour < timeRange.endHour && eventEndHour > timeRange.startHour;
     }
 
     return true;
