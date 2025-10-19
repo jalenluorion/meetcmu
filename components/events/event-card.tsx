@@ -11,9 +11,10 @@ import { useRouter } from "next/navigation";
 interface EventCardProps {
   event: EventWithHost;
   onInterestToggle?: (eventId: string, isInterested: boolean) => Promise<void>;
+  isLoggedIn?: boolean;
 }
 
-export function EventCard({ event, onInterestToggle }: EventCardProps) {
+export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventCardProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const isInterested = event.user_is_prospect || event.user_is_attendee;
@@ -120,9 +121,11 @@ export function EventCard({ event, onInterestToggle }: EventCardProps) {
           onClick={handleInterestClick}
           disabled={isLoading}
         >
-          {event.status === 'tentative' 
-            ? (isInterested ? "Interested ✓" : "I'm Interested")
-            : (isInterested ? "Joined ✓" : "Join Event")
+          {!isLoggedIn
+            ? "Log in to Join"
+            : event.status === 'tentative' 
+              ? (isInterested ? "Interested ✓" : "I'm Interested")
+              : (isInterested ? "Joined ✓" : "Join Event")
           }
         </Button>
       </CardFooter>

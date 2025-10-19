@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface EventDetailClientProps {
   event: EventWithDetails;
-  userId: string;
+  userId?: string;
 }
 
 export function EventDetailClient({ event: initialEvent, userId }: EventDetailClientProps) {
@@ -20,7 +20,8 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
-  const isHost = event.host_id === userId;
+  const isLoggedIn = !!userId;
+  const isHost = userId ? event.host_id === userId : false;
   const isInterested = event.user_is_prospect || event.user_is_attendee;
 
   const formatDateTime = (startTime: string | null, endTime: string | null) => {
@@ -51,6 +52,12 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
   };
 
   const handleInterestToggle = async () => {
+    // Redirect to login if not authenticated
+    if (!userId) {
+      router.push('/auth/login');
+      return;
+    }
+
     setIsLoading(true);
     try {
       if (event.status === 'tentative') {
@@ -292,9 +299,11 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
               disabled={isLoading}
               variant={isInterested ? "outline" : "default"}
             >
-              {event.status === 'tentative' 
-                ? (isInterested ? "Remove Interest" : "I'm Interested")
-                : (isInterested ? "Leave Event" : "Join Event")
+              {!isLoggedIn
+                ? "Log in to Join"
+                : event.status === 'tentative' 
+                  ? (isInterested ? "Remove Interest" : "I'm Interested")
+                  : (isInterested ? "Leave Event" : "Join Event")
               }
             </Button>
           )}

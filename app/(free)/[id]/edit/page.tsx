@@ -1,29 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { EditEventForm } from "@/components/events/edit-event-form";
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  // Get current user
+  // Require authentication for editing
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return null;
+    redirect("/auth/login");
   }
 
-  // Fetch event with host
+  // Fetch event
   const { data: event, error } = await supabase
     .from('events')
-    .select(`
-      *,
-      host:profiles!events_host_id_fkey(
-        id,
-        email,
-        full_name,
-        avatar_url
-      )
-    `)
+    .select('*')
     .eq('id', id)
     .single();
 
@@ -31,14 +23,10 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     notFound();
   }
 
-  // Check if current user is the host
+  // Verify user is the host
   if (event.host_id !== user.id) {
-    notFound();
+    redirect(`/${id}`);
   }
 
-  return (
-    <main className="">
-    <EditEventForm event={event} />
-    </main>
-  );
+  return <EditEventForm event={event} />;
 }

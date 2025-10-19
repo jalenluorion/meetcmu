@@ -6,11 +6,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const supabase = await createClient();
 
-  // Get current user
+  // Get current user (may be null for logged out users)
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return null;
-  }
 
   // Fetch event with host
   const { data: event, error } = await supabase
@@ -68,9 +65,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     attendees: attendeeProfiles,
     prospect_count: prospectProfiles.length,
     attendee_count: attendeeProfiles.length,
-    user_is_prospect: prospects?.some(p => p.user_id === user.id) || false,
-    user_is_attendee: attendees?.some(a => a.user_id === user.id) || false,
+    user_is_prospect: user ? (prospects?.some(p => p.user_id === user.id) || false) : false,
+    user_is_attendee: user ? (attendees?.some(a => a.user_id === user.id) || false) : false,
   };
 
-  return <EventDetailClient event={eventWithDetails} userId={user.id} />;
+  return <EventDetailClient event={eventWithDetails} userId={user?.id} />;
 }

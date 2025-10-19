@@ -6,17 +6,13 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default async function AuthenticatedLayout({
+export default async function NormalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  
-  if (!data?.user) {
-    redirect("/auth/login");
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -26,12 +22,14 @@ export default async function AuthenticatedLayout({
             MeetCMU
           </Link>
           <div className="flex gap-3 items-center">
-            <Button asChild size="sm">
-              <Link href="/new">
-                <Plus className="h-4 w-4 mr-1" />
-                New Event
-              </Link>
-            </Button>
+            {user && (
+              <Button asChild size="sm">
+                <Link href="/new">
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Event
+                </Link>
+              </Button>
+            )}
             <div className="flex gap-3 items-center">
               <AuthButton />
               <ThemeSwitcher />

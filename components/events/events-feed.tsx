@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 interface EventsFeedProps {
   initialEvents: EventWithHost[];
-  userId: string;
+  userId?: string;
 }
 
 export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
@@ -24,6 +24,12 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
   });
 
   const handleInterestToggle = async (eventId: string, isInterested: boolean) => {
+    // Redirect to login if not authenticated
+    if (!userId) {
+      router.push('/auth/login');
+      return;
+    }
+
     const event = events.find(e => e.id === eventId);
     if (!event) return;
 
@@ -117,6 +123,7 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
               key={event.id} 
               event={event} 
               onInterestToggle={handleInterestToggle}
+              isLoggedIn={!!userId}
             />
           ))}
         </div>
