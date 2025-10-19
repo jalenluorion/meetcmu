@@ -17,14 +17,15 @@ export function EventFilter({ activeFilter, onFilterChange }: EventFilterProps) 
   ];
 
   return (
-    <div className="flex gap-2">
+    <div className="inline-flex bg-muted p-1 rounded-lg">
       {filters.map((filter) => (
         <Button
           key={filter.value}
-          variant={activeFilter === filter.value ? "default" : "outline"}
+          variant={activeFilter === filter.value ? "default" : "ghost"}
           size="sm"
           onClick={() => onFilterChange(filter.value)}
-        >
+          className="h-6"
+>
           {filter.label}
         </Button>
       ))}

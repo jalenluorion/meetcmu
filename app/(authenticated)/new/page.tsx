@@ -43,6 +43,26 @@ export default function NewEventPage() {
     }));
   };
 
+  // Helper function to round time to nearest 15-minute interval
+  const roundTo15Minutes = (timeString: string): string => {
+    if (!timeString) return timeString;
+
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const roundedMinutes = Math.round(minutes / 15) * 15;
+
+    if (roundedMinutes === 60) {
+      return `${(hours + 1) % 24}:${'00'}`;
+    }
+
+    return `${hours.toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to combine date and time for end_time
+  const combineDateTime = (dateString: string, timeString: string): string => {
+    if (!dateString || !timeString) return '';
+    return `${dateString.split('T')[0]}T${timeString}:00`;
+  };
+
   const handleSubmit = async (e: React.FormEvent, asTentative: boolean) => {
     e.preventDefault();
     setIsLoading(true);
@@ -51,6 +71,28 @@ export default function NewEventPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Validate that start and end times are on the same date
+      if (formData.date_time && formData.end_time) {
+        const startDate = new Date(formData.date_time);
+        const endDateTime = combineDateTime(formData.date_time, formData.end_time);
+
+        if (!endDateTime) {
+          throw new Error('End time is required');
+        }
+
+        const endDate = new Date(endDateTime);
+
+        // Check if they're on the same date
+        if (startDate.toDateString() !== endDate.toDateString()) {
+          throw new Error('Start and end times must be on the same date');
+        }
+
+        // Check that end time is after start time
+        if (endDate <= startDate) {
+          throw new Error('End time must be after start time');
+        }
+      }
+
       const { data, error } = await supabase
         .from('events')
         .insert({
@@ -58,7 +100,7 @@ export default function NewEventPage() {
           title: formData.title,
           description: formData.description || null,
           date_time: formData.date_time || null,
-          end_time: formData.end_time || null,
+          end_time: formData.date_time && formData.end_time ? combineDateTime(formData.date_time, formData.end_time) : null,
           location: formData.location || null,
           tags: formData.tags.length > 0 ? formData.tags : null,
           visibility: formData.visibility,
@@ -99,7 +141,7 @@ export default function NewEventPage() {
       router.push(`/${data.id}`);
     } catch (error) {
       console.error('Error creating event:', error);
-      alert('Failed to create event. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to create event. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -142,12 +184,13 @@ export default function NewEventPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="date_time">Start Time *</Label>
+                <Label htmlFor="date_time">Start Date & Time *</Label>
                 <Input
                   id="date_time"
                   type="datetime-local"
                   value={formData.date_time}
                   onChange={(e) => setFormData({ ...formData, date_time: e.target.value })}
+                  step="900"
                   required
                 />
               </div>
@@ -155,9 +198,13 @@ export default function NewEventPage() {
                 <Label htmlFor="end_time">End Time *</Label>
                 <Input
                   id="end_time"
-                  type="datetime-local"
+                  type="time"
                   value={formData.end_time}
-                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                  onChange={(e) => {
+                    const roundedTime = roundTo15Minutes(e.target.value);
+                    setFormData({ ...formData, end_time: roundedTime });
+                  }}
+                  step="900"
                   required
                 />
               </div>

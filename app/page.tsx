@@ -12,7 +12,7 @@ export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch all events with host information and counts
+  // Fetch all events with host information and counts, sorted by date_time
   const { data: events, error } = await supabase
     .from('events')
     .select(`
@@ -25,7 +25,7 @@ export default async function HomePage() {
       )
     `)
     .eq('visibility', 'public')
-    .order('created_at', { ascending: false });
+    .order('date_time', { ascending: true, nullsFirst: false });
 
   if (error) {
     console.error('Error fetching events:', error);
