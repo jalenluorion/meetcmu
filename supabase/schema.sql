@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS events (
   date_time TIMESTAMP WITH TIME ZONE,
   end_time TIMESTAMP WITH TIME ZONE,
   location TEXT,
+  organization TEXT,
   tags TEXT[], -- Array of tags like "sports", "board games", etc.
   status TEXT NOT NULL CHECK (status IN ('tentative', 'official')) DEFAULT 'tentative',
   visibility TEXT NOT NULL CHECK (visibility IN ('public', 'private')) DEFAULT 'public',

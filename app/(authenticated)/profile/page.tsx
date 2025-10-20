@@ -54,6 +54,7 @@ export default async function ProfilePage() {
       month: "short",
       day: "numeric",
       year: "numeric",
+      timeZone: "America/New_York"
     });
   };
 

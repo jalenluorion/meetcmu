@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Event } from "@/lib/types/database";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const COMMON_TAGS = [
   "🏀 sports",
@@ -40,16 +46,18 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
   const [formData, setFormData] = useState({
     title: initialEvent.title,
     description: initialEvent.description || "",
-    date_time: initialEvent.date_time ? new Date(initialEvent.date_time).toISOString().slice(0, 16) : "",
-    end_time: initialEvent.end_time ? (() => {
-      const endDate = new Date(initialEvent.end_time);
-      return endDate.toTimeString().slice(0, 5);
-    })() : "",
+    date_time: initialEvent.date_time 
+      ? dayjs.utc(initialEvent.date_time).tz("America/New_York").format("YYYY-MM-DDTHH:mm")
+      : "",
+    end_time: initialEvent.end_time
+      ? dayjs.utc(initialEvent.end_time).tz("America/New_York").format("HH:mm")
+      : "",
     location: initialEvent.location || "",
+    organization: initialEvent.organization || "",
     tags: initialEvent.tags || [],
     visibility: initialEvent.visibility,
   });
-
+  
   // Helper function to generate 25live booking URL for location
   const get25LiveUrl = (location: string): string => {
     if (!location.trim()) return '';
@@ -66,24 +74,11 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
     }));
   };
 
-  // Helper function to round time to nearest 15-minute interval
-  const roundTo15Minutes = (timeString: string): string => {
-    if (!timeString) return timeString;
-
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const roundedMinutes = Math.round(minutes / 15) * 15;
-
-    if (roundedMinutes === 60) {
-      return `${(hours + 1) % 24}:${'00'}`;
-    }
-
-    return `${hours.toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
-  };
-
-  // Helper function to combine date and time for end_time
+  // Helper function to combine date and time, converting from Eastern to UTC
   const combineDateTime = (dateString: string, timeString: string): string => {
     if (!dateString || !timeString) return '';
-    return `${dateString.split('T')[0]}T${timeString}:00`;
+    // Combine date and time in Eastern timezone, then convert to UTC
+    return dayjs.tz(`${dateString.split('T')[0]} ${timeString}`, "America/New_York").utc().toISOString();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,24 +86,18 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
     setIsLoading(true);
 
     try {
-      // Validate that start and end times are on the same date
+      // Validate that start and end times are on the same date (in Eastern timezone)
       if (formData.date_time && formData.end_time) {
-        const startDate = new Date(formData.date_time);
-        const endDateTime = combineDateTime(formData.date_time, formData.end_time);
-
-        if (!endDateTime) {
-          throw new Error('End time is required');
-        }
-
-        const endDate = new Date(endDateTime);
+        const startDateTime = dayjs.tz(formData.date_time, "America/New_York");
+        const endDateTime = dayjs.tz(`${formData.date_time.split('T')[0]} ${formData.end_time}`, "America/New_York");
 
         // Check if they're on the same date
-        if (startDate.toDateString() !== endDate.toDateString()) {
+        if (!startDateTime.isSame(endDateTime, 'day')) {
           throw new Error('Start and end times must be on the same date');
         }
 
         // Check that end time is after start time
-        if (endDate <= startDate) {
+        if (!endDateTime.isAfter(startDateTime)) {
           throw new Error('End time must be after start time');
         }
       }
@@ -118,9 +107,14 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
         .update({
           title: formData.title,
           description: formData.description || null,
-          date_time: formData.date_time || null,
-          end_time: formData.date_time && formData.end_time ? combineDateTime(formData.date_time, formData.end_time) : null,
+          date_time: formData.date_time
+            ? dayjs.tz(formData.date_time, "America/New_York").utc().toISOString()
+            : null,
+          end_time: formData.date_time && formData.end_time
+            ? combineDateTime(formData.date_time, formData.end_time)
+            : null,
           location: formData.location || null,
+          organization: formData.organization || null,
           tags: formData.tags.length > 0 ? formData.tags : null,
           visibility: formData.visibility,
         })
@@ -197,11 +191,8 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
                   id="end_time"
                   type="time"
                   value={formData.end_time}
-                  onChange={(e) => {
-                    const roundedTime = roundTo15Minutes(e.target.value);
-                    setFormData({ ...formData, end_time: roundedTime });
-                  }}
-                  step="900"
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                  step="60"
                   required
                 />
               </div>
@@ -229,6 +220,16 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
                   to avoid scheduling conflicts.
                 </p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="organization">Organization</Label>
+              <Input
+                id="organization"
+                placeholder="e.g., Student Government, Sports Club, etc."
+                value={formData.organization}
+                onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+              />
             </div>
 
             <div className="space-y-2">

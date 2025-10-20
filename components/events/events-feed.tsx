@@ -39,7 +39,12 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
 
     // Check date filter
     if (dateFilter && event.date_time) {
-      const eventDate = new Date(event.date_time).toISOString().split('T')[0]; // Get YYYY-MM-DD format
+      const eventDate = new Date(event.date_time).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "America/New_York",
+      }).split('/').reverse().join('-').replace(/-(\d)\//g, '-0$1/').replace(/\/(\d)$/g, '/0$1'); // Convert to YYYY-MM-DD
       if (eventDate !== dateFilter) return false;
     } else if (dateFilter) {
       // If date filter is set but event has no date, exclude it
@@ -48,8 +53,13 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
 
     // Check time range filter
     if (timeRange && event.date_time) {
+      // Get hour in Eastern timezone
       const eventStart = new Date(event.date_time);
-      const eventStartHour = eventStart.getHours();
+      const eventStartHour = parseInt(eventStart.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: "America/New_York",
+      }));
 
       // If event has no end time, check if start time is within range
       if (!event.end_time) {
@@ -58,7 +68,11 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
 
       // If event has end time, check for any overlap with the time window
       const eventEnd = new Date(event.end_time);
-      const eventEndHour = eventEnd.getHours();
+      const eventEndHour = parseInt(eventEnd.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: "America/New_York",
+      }));
 
       // Event overlaps with window if: event starts before window ends AND event ends after window starts
       return eventStartHour < timeRange.endHour && eventEndHour > timeRange.startHour;

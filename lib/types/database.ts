@@ -22,6 +22,7 @@ export interface Event {
   date_time: string | null;
   end_time: string | null;
   location: string | null;
+  organization: string | null;
   tags: string[] | null;
   status: EventStatus;
   visibility: EventVisibility;

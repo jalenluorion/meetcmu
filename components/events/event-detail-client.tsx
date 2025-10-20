@@ -33,11 +33,13 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
       month: "long",
       day: "numeric",
       year: "numeric",
+      timeZone: "America/New_York"
     });
     
     const startTimeStr = start.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
+      timeZone: "America/New_York"
     });
     
     if (!endTime) return `${dateStr} at ${startTimeStr}`;
@@ -46,6 +48,7 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
     const endTimeStr = end.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
+      timeZone: "America/New_York"
     });
     
     return `${dateStr}, ${startTimeStr} - ${endTimeStr}`;

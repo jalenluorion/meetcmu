@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const COMMON_TAGS = [
   "🏀 sports",
@@ -30,6 +36,7 @@ export default function NewEventPage() {
     date_time: "",
     end_time: "",
     location: "",
+    organization: "",
     tags: [] as string[],
     visibility: "public" as "public" | "private",
   });
@@ -64,10 +71,11 @@ export default function NewEventPage() {
     return `${hours.toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
   };
 
-  // Helper function to combine date and time for end_time
+  // Helper function to combine date and time, converting from Eastern to UTC
   const combineDateTime = (dateString: string, timeString: string): string => {
     if (!dateString || !timeString) return '';
-    return `${dateString.split('T')[0]}T${timeString}:00`;
+    // Combine date and time in Eastern timezone, then convert to UTC
+    return dayjs.tz(`${dateString.split('T')[0]} ${timeString}`, "America/New_York").utc().toISOString();
   };
 
   const handleSubmit = async (e: React.FormEvent, asTentative: boolean) => {
@@ -78,24 +86,18 @@ export default function NewEventPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Validate that start and end times are on the same date
+      // Validate that start and end times are on the same date (in Eastern timezone)
       if (formData.date_time && formData.end_time) {
-        const startDate = new Date(formData.date_time);
-        const endDateTime = combineDateTime(formData.date_time, formData.end_time);
-
-        if (!endDateTime) {
-          throw new Error('End time is required');
-        }
-
-        const endDate = new Date(endDateTime);
+        const startDateTime = dayjs.tz(formData.date_time, "America/New_York");
+        const endDateTime = dayjs.tz(`${formData.date_time.split('T')[0]} ${formData.end_time}`, "America/New_York");
 
         // Check if they're on the same date
-        if (startDate.toDateString() !== endDate.toDateString()) {
+        if (!startDateTime.isSame(endDateTime, 'day')) {
           throw new Error('Start and end times must be on the same date');
         }
 
         // Check that end time is after start time
-        if (endDate <= startDate) {
+        if (!endDateTime.isAfter(startDateTime)) {
           throw new Error('End time must be after start time');
         }
       }
@@ -106,9 +108,14 @@ export default function NewEventPage() {
           host_id: user.id,
           title: formData.title,
           description: formData.description || null,
-          date_time: formData.date_time || null,
-          end_time: formData.date_time && formData.end_time ? combineDateTime(formData.date_time, formData.end_time) : null,
+          date_time: formData.date_time
+            ? dayjs.tz(formData.date_time, "America/New_York").utc().toISOString()
+            : null,
+          end_time: formData.date_time && formData.end_time
+            ? combineDateTime(formData.date_time, formData.end_time)
+            : null,
           location: formData.location || null,
+          organization: formData.organization || null,
           tags: formData.tags.length > 0 ? formData.tags : null,
           visibility: formData.visibility,
           status: asTentative ? 'tentative' : 'official',
@@ -239,6 +246,16 @@ export default function NewEventPage() {
                   to avoid scheduling conflicts.
                 </p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="organization">Organization</Label>
+              <Input
+                id="organization"
+                placeholder="e.g., Student Government, Sports Club, etc."
+                value={formData.organization}
+                onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+              />
             </div>
 
             <div className="space-y-2">

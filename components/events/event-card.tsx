@@ -41,11 +41,13 @@ export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventC
       weekday: "short",
       month: "short",
       day: "numeric",
+      timeZone: "America/New_York"
     });
     
     const startTimeStr = start.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
+      timeZone: "America/New_York",
     });
     
     if (!endTime) return `${dateStr}, ${startTimeStr}`;
@@ -54,6 +56,7 @@ export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventC
     const endTimeStr = end.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
+      timeZone: "America/New_York",
     });
     
     return `${dateStr}, ${startTimeStr} - ${endTimeStr}`;
