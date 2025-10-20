@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "../ui/input";
 
 export type TimeWindow = 'all' | 'today' | 'this_week' | 'this_month' | 'upcoming';
+export type SortBy = 'upcoming' | 'most_popular';
 
 // Helper function to format hour for display
 const formatHour = (hour: number): string => {
@@ -44,6 +45,8 @@ interface AdvancedFilterProps {
   onTimeRangeChange?: (range: TimeRange | undefined) => void;
   selectedDate?: string;
   onDateChange?: (date: string | undefined) => void;
+  sortBy?: SortBy;
+  onSortByChange?: (sortBy: SortBy) => void;
 }
 
 export function AdvancedFilter({
@@ -54,6 +57,8 @@ export function AdvancedFilter({
   onTimeRangeChange,
   selectedDate,
   onDateChange,
+  sortBy = 'upcoming',
+  onSortByChange,
 }: AdvancedFilterProps) {
   const [open, setOpen] = useState(false);
   const [tempStartHour, setTempStartHour] = useState<string>(
@@ -107,11 +112,25 @@ export function AdvancedFilter({
           Filters
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        
+        {/* Sort By Section */}
+        <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+        <div className="p-2 pt-0">
+          <DropdownMenuRadioGroup value={sortBy} onValueChange={(value) => onSortByChange?.(value as SortBy)}>
+            <DropdownMenuRadioItem value="upcoming">
+              Upcoming
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="most_popular">
+              Most Popular
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </div>
+        <DropdownMenuSeparator />
         <DropdownMenuLabel className="">
             Date
           </DropdownMenuLabel>
         {/* Date Filter Section */}
-        <div className="p-2 space-y-2">
+        <div className="p-2 pt-0 space-y-2">
 
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Select Date</Label>
@@ -129,7 +148,7 @@ export function AdvancedFilter({
             Time Window
           </DropdownMenuLabel>
         {/* Time Window Filter Section */}
-        <div className="p-2 space-y-3">
+        <div className="p-2 pt-0 space-y-3">
           
 
           {selectedTimeRange ? (
@@ -205,6 +224,7 @@ export function AdvancedFilter({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Tags</DropdownMenuLabel>
+            <div className="p-2 pt-0">
             {availableTags.map(tag => (
               <DropdownMenuCheckboxItem
                 key={tag}
@@ -214,6 +234,7 @@ export function AdvancedFilter({
                 {tag}
               </DropdownMenuCheckboxItem>
             ))}
+            </div>
           </>
         )}
 

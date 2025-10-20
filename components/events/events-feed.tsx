@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { AdvancedFilter } from "./advanced-filter";
+import { AdvancedFilter, SortBy } from "./advanced-filter";
 
 interface EventsFeedProps {
   initialEvents: EventWithHost[];
@@ -22,6 +22,7 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState<{startHour: number, endHour: number} | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<SortBy>('upcoming');
   const router = useRouter();
   const supabase = createClient();
 
@@ -117,15 +118,22 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
       return true;
     })
     .sort((a, b) => {
-      // Sort by date_time (upcoming events first, then by date)
-      if (!a.date_time && !b.date_time) return 0;
-      if (!a.date_time) return 1;
-      if (!b.date_time) return -1;
-      
-      const dateA = new Date(a.date_time).getTime();
-      const dateB = new Date(b.date_time).getTime();
-      
-      return dateA - dateB;
+      if (sortBy === 'most_popular') {
+        // Sort by popularity (attendees/prospects count)
+        const countA = a.status === 'tentative' ? a.prospect_count : a.attendee_count;
+        const countB = b.status === 'tentative' ? b.prospect_count : b.attendee_count;
+        return countB - countA; // Descending order (most popular first)
+      } else {
+        // Sort by date_time (upcoming events first, then by date)
+        if (!a.date_time && !b.date_time) return 0;
+        if (!a.date_time) return 1;
+        if (!b.date_time) return -1;
+        
+        const dateA = new Date(a.date_time).getTime();
+        const dateB = new Date(b.date_time).getTime();
+        
+        return dateA - dateB;
+      }
     });
 
   const handleInterestToggle = async (eventId: string, isInterested: boolean) => {
@@ -224,6 +232,8 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
               onTimeRangeChange={setSelectedTimeRange}
               selectedDate={selectedDate}
               onDateChange={setSelectedDate}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
             />
           </div>
         </div>
