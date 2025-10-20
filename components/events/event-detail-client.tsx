@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar, MapPin, Users, Trash2, Edit } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EventChat } from "./event-chat";
 
 interface EventDetailClientProps {
   event: EventWithDetails;
@@ -81,7 +82,22 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
           await supabase
             .from('event_prospects')
             .insert({ event_id: event.id, user_id: userId });
-          
+
+          // Get current user profile to add to prospects list
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+          // Update local state immediately
+          setEvent({
+            ...event,
+            user_is_prospect: true,
+            prospect_count: event.prospect_count + 1,
+            prospects: userProfile ? [...event.prospects, userProfile] : event.prospects,
+          });
+
           router.refresh();
         }
       } else {
@@ -102,6 +118,21 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
           await supabase
             .from('event_attendees')
             .insert({ event_id: event.id, user_id: userId });
+          
+          // Get current user profile to add to attendees list
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+          // Update local state immediately
+          setEvent({
+            ...event,
+            user_is_attendee: true,
+            attendee_count: event.attendee_count + 1,
+            attendees: userProfile ? [...event.attendees, userProfile] : event.attendees,
+          });
           
           router.refresh();
         }
@@ -378,6 +409,13 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
           </CardContent>
         </Card>
       )}
+
+      {/* Event Chat - visible to all interested members (prospects, attendees, and host) */}
+      <EventChat 
+        eventId={event.id} 
+        userId={userId} 
+        isInterested={isInterested || isHost}
+      />
     </div>
   );
 }

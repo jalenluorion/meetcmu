@@ -60,6 +60,15 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Event messages table (for chat)
+CREATE TABLE IF NOT EXISTS event_messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID REFERENCES events(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_events_host_id ON events(host_id);
 CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
@@ -70,6 +79,8 @@ CREATE INDEX IF NOT EXISTS idx_event_attendees_event_id ON event_attendees(event
 CREATE INDEX IF NOT EXISTS idx_event_attendees_user_id ON event_attendees(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_event_messages_event_id ON event_messages(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_messages_created_at ON event_messages(created_at DESC);
 
 -- Enable Row Level Security
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -77,6 +88,7 @@ ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_prospects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_attendees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_messages ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
 CREATE POLICY "Public profiles are viewable by everyone" ON profiles
@@ -127,6 +139,33 @@ CREATE POLICY "Users can view their own notifications" ON notifications
 
 CREATE POLICY "Users can update their own notifications" ON notifications
   FOR UPDATE USING (auth.uid() = user_id);
+
+-- Event messages policies
+-- Users can view messages if they are prospects or attendees of the event
+CREATE POLICY "Event messages are viewable by interested users" ON event_messages
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM event_prospects WHERE event_id = event_messages.event_id AND user_id = auth.uid()
+    ) OR EXISTS (
+      SELECT 1 FROM event_attendees WHERE event_id = event_messages.event_id AND user_id = auth.uid()
+    ) OR EXISTS (
+      SELECT 1 FROM events WHERE id = event_messages.event_id AND host_id = auth.uid()
+    )
+  );
+
+-- Users can send messages if they are prospects or attendees of the event
+CREATE POLICY "Interested users can send messages" ON event_messages
+  FOR INSERT WITH CHECK (
+    auth.uid() = user_id AND (
+      EXISTS (
+        SELECT 1 FROM event_prospects WHERE event_id = event_messages.event_id AND user_id = auth.uid()
+      ) OR EXISTS (
+        SELECT 1 FROM event_attendees WHERE event_id = event_messages.event_id AND user_id = auth.uid()
+      ) OR EXISTS (
+        SELECT 1 FROM events WHERE id = event_messages.event_id AND host_id = auth.uid()
+      )
+    )
+  );
 
 -- Function to automatically create profile on user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
