@@ -257,7 +257,7 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-3xl">{event.title}</CardTitle>
-                <StatusBadge status={event.status} />
+                <StatusBadge status={event.status} dateTime={event.date_time} endTime={event.end_time} />
               </div>
               <CardDescription>
                 Hosted by {event.host.full_name || event.host.email}

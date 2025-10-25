@@ -72,7 +72,7 @@ export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventC
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-xl">{event.title}</CardTitle>
-          <StatusBadge status={event.status} />
+          <StatusBadge status={event.status} dateTime={event.date_time} endTime={event.end_time} />
         </div>
         <CardDescription className="text-sm text-muted-foreground">
           Hosted by {event.host.full_name || event.host.email}

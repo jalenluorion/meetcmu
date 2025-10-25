@@ -25,6 +25,7 @@ export default async function HomePage() {
       )
     `)
     .eq('visibility', 'public')
+    .gte('date_time', new Date().toISOString())
     .order('date_time', { ascending: true, nullsFirst: false });
 
   if (error) {

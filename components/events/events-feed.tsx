@@ -124,14 +124,14 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
         const countB = b.status === 'tentative' ? b.prospect_count : b.attendee_count;
         return countB - countA; // Descending order (most popular first)
       } else {
-        // Sort by date_time (upcoming events first, then by date)
+        // Sort by date_time (chronological order - soonest first)
         if (!a.date_time && !b.date_time) return 0;
         if (!a.date_time) return 1;
         if (!b.date_time) return -1;
-        
+
         const dateA = new Date(a.date_time).getTime();
         const dateB = new Date(b.date_time).getTime();
-        
+
         return dateA - dateB;
       }
     });
@@ -252,8 +252,8 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
 
       {filteredEvents.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          <p className="text-lg">No events found.</p>
-          <p className="text-sm mt-2">Be the first to create an event!</p>
+          <p className="text-lg">No upcoming events found.</p>
+          <p className="text-sm mt-2">Check back later or be the first to create an event!</p>
         </div>
       ) : (
         <div className="grid gap-4">
