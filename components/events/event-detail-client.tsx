@@ -310,10 +310,14 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
               <span>{formatDateTime(event.date_time, event.end_time)}</span>
             </div>
             
-            {event.location && (
+            {(event.location_building || event.location) && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-5 w-5" />
-                <span>{event.location}</span>
+                <span>
+                  {event.location_building && event.location
+                    ? `${event.location_building} ${event.location}`
+                    : event.location_building || event.location}
+                </span>
               </div>
             )}
           </div>

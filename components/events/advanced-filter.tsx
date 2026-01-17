@@ -45,6 +45,9 @@ interface AdvancedFilterProps {
   onTimeRangeChange?: (range: TimeRange | undefined) => void;
   selectedDate?: string;
   onDateChange?: (date: string | undefined) => void;
+  selectedBuilding?: string;
+  onBuildingChange?: (building: string | undefined) => void;
+  availableBuildings?: string[];
   sortBy?: SortBy;
   onSortByChange?: (sortBy: SortBy) => void;
 }
@@ -57,6 +60,9 @@ export function AdvancedFilter({
   onTimeRangeChange,
   selectedDate,
   onDateChange,
+  selectedBuilding,
+  onBuildingChange,
+  availableBuildings = [],
   sortBy = 'upcoming',
   onSortByChange,
 }: AdvancedFilterProps) {
@@ -80,6 +86,7 @@ export function AdvancedFilter({
     onTagsChange([]);
     onTimeRangeChange?.(undefined);
     onDateChange?.(undefined);
+    onBuildingChange?.(undefined);
   };
 
   const applyTimeRange = () => {
@@ -91,7 +98,7 @@ export function AdvancedFilter({
     }
   };
 
-  const activeFiltersCount = selectedTags.length + (selectedTimeRange ? 1 : 0) + (selectedDate ? 1 : 0);
+  const activeFiltersCount = selectedTags.length + (selectedTimeRange ? 1 : 0) + (selectedDate ? 1 : 0) + (selectedBuilding ? 1 : 0);
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -219,6 +226,25 @@ export function AdvancedFilter({
             </div>
           )}
         </div>
+
+        {availableBuildings.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Building</DropdownMenuLabel>
+            <div className="p-2 pt-0">
+              <DropdownMenuRadioGroup value={selectedBuilding || ''} onValueChange={(value) => onBuildingChange?.(value || undefined)}>
+                <DropdownMenuRadioItem value="">
+                  All Buildings
+                </DropdownMenuRadioItem>
+                {availableBuildings.map(building => (
+                  <DropdownMenuRadioItem key={building} value={building}>
+                    {building}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </div>
+          </>
+        )}
 
         {availableTags.length > 0 && (
           <>

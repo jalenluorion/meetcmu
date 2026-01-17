@@ -22,6 +22,7 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState<{startHour: number, endHour: number} | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
+  const [selectedBuilding, setSelectedBuilding] = useState<string | undefined>(undefined);
   const [sortBy, setSortBy] = useState<SortBy>('upcoming');
   const router = useRouter();
   const supabase = createClient();
@@ -30,6 +31,15 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
   const availableTags = Array.from(
     new Set(
       events.flatMap(event => event.tags || [])
+    )
+  ).sort();
+
+  // Extract all unique buildings from events
+  const availableBuildings = Array.from(
+    new Set(
+      events
+        .map(event => event.location_building)
+        .filter((building): building is string => !!building)
     )
   ).sort();
 
@@ -95,10 +105,16 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
         const matchesTitle = event.title?.toLowerCase().includes(query);
         const matchesDescription = event.description?.toLowerCase().includes(query);
         const matchesLocation = event.location?.toLowerCase().includes(query);
+        const matchesBuilding = event.location_building?.toLowerCase().includes(query);
         
-        if (!matchesTitle && !matchesDescription && !matchesLocation) {
+        if (!matchesTitle && !matchesDescription && !matchesLocation && !matchesBuilding) {
           return false;
         }
+      }
+      
+      // Filter by building
+      if (selectedBuilding && event.location_building !== selectedBuilding) {
+        return false;
       }
       
       // Filter by tags
@@ -232,6 +248,9 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
               onTimeRangeChange={setSelectedTimeRange}
               selectedDate={selectedDate}
               onDateChange={setSelectedDate}
+              selectedBuilding={selectedBuilding}
+              onBuildingChange={setSelectedBuilding}
+              availableBuildings={availableBuildings}
               sortBy={sortBy}
               onSortByChange={setSortBy}
             />

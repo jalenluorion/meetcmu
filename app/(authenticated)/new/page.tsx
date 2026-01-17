@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BuildingInput } from "@/components/ui/building-input";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -39,6 +40,7 @@ export default function NewEventPage() {
     date_time: "",
     end_time: "",
     location: "",
+    location_building: "",
     organization: "",
     tags: [] as string[],
     visibility: "public" as "public" | "private",
@@ -54,9 +56,10 @@ export default function NewEventPage() {
   };
 
   // Helper function to generate 25live booking URL for location
-  const get25LiveUrl = (location: string): string => {
-    if (!location.trim()) return '';
-    const encodedLocation = encodeURIComponent(location.trim());
+  const get25LiveUrl = (building: string, location: string): string => {
+    const fullLocation = building ? `${building} ${location}`.trim() : location.trim();
+    if (!fullLocation) return '';
+    const encodedLocation = encodeURIComponent(fullLocation);
     return `https://25live.collegenet.com/pro/cmu#!/home/search/location/list/&name=${encodedLocation}`;
   };
 
@@ -120,6 +123,7 @@ export default function NewEventPage() {
             ? combineDateTime(formData.date_time, formData.end_time)
             : null,
           location: formData.location || null,
+          location_building: formData.location_building || null,
           organization: formData.organization || null,
           tags: formData.tags.length > 0 ? formData.tags : null,
           visibility: formData.visibility,
@@ -231,17 +235,17 @@ export default function NewEventPage() {
 
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                placeholder="e.g., Margaret Morrison Commons"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              <BuildingInput
+                selectedBuilding={formData.location_building}
+                locationDetails={formData.location}
+                onBuildingChange={(building) => setFormData({ ...formData, location_building: building })}
+                onLocationChange={(location) => setFormData({ ...formData, location })}
               />
-              {formData.location && (
+              {(formData.location_building || formData.location) && (
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium">Note:</span> It&apos;s your responsibility as the host to book any relevant rooms on{" "}
                   <a
-                    href={get25LiveUrl(formData.location)}
+                    href={get25LiveUrl(formData.location_building, formData.location)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"

@@ -90,10 +90,14 @@ export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventC
             <span>{formatDateTime(event.date_time, event.end_time)}</span>
           </div>
           
-          {event.location && (
+          {(event.location_building || event.location) && (
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4" />
-              <span className="truncate">{event.location}</span>
+              <span className="truncate">
+                {event.location_building && event.location
+                  ? `${event.location_building} ${event.location}`
+                  : event.location_building || event.location}
+              </span>
             </div>
           )}
         </div>
