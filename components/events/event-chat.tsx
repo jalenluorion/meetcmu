@@ -201,7 +201,7 @@ export function EventChat({ eventId, userId, isInterested }: EventChatProps) {
                       key={message.id}
                       className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
                     >
-                      <Avatar className="h-8 w-8 flex-shrink-0">
+                      <Avatar className="h-8 w-8 shrink-0">
                         <AvatarImage src={message.profiles.avatar_url || undefined} />
                         <AvatarFallback className="text-xs">
                           {getInitials(message.profiles.full_name, message.profiles.email)}
@@ -224,7 +224,7 @@ export function EventChat({ eventId, userId, isInterested }: EventChatProps) {
                               : 'bg-muted'
                           }`}
                         >
-                          <p className="text-sm break-words">{message.message}</p>
+                          <p className="text-sm wrap-break-word">{message.message}</p>
                         </div>
                         </div>
                       </div>

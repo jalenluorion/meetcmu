@@ -170,7 +170,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
               <Label htmlFor="description">Description</Label>
               <textarea
                 id="description"
-                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="What's this event about?"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -243,7 +243,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
                   <Button
                     key={tag}
                     type="button"
-                    variant={formData.tags.includes(tag) ? "default" : "outline"}
+                    variant={formData.tags.includes(tag) ? "default" : "outline-solid"}
                     size="sm"
                     onClick={() => handleTagToggle(tag)}
                   >
@@ -258,7 +258,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant={formData.visibility === "public" ? "default" : "outline"}
+                  variant={formData.visibility === "public" ? "default" : "outline-solid"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "public" })}
                 >
@@ -266,7 +266,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
                 </Button>
                 <Button
                   type="button"
-                  variant={formData.visibility === "private" ? "default" : "outline"}
+                  variant={formData.visibility === "private" ? "default" : "outline-solid"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "private" })}
                 >

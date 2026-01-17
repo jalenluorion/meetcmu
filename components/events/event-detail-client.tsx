@@ -343,7 +343,7 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
               className="w-full"
               onClick={handleInterestToggle}
               disabled={isLoading}
-              variant={isInterested ? "outline" : "default"}
+              variant={isInterested ? "outline-solid" : "default"}
             >
               {!isLoggedIn
                 ? "Log in to Join"

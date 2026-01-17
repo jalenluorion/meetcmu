@@ -13,6 +13,7 @@ import { BuildingInput } from "@/components/ui/building-input";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { ArrowLeft } from "lucide-react";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -172,8 +173,15 @@ export default function NewEventPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">Create New Event</h1>
-
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="sm" asChild className="w-8">
+          <a href={`/`}>
+            <ArrowLeft />
+          </a>
+        </Button>
+        <h1 className="text-3xl font-bold">Create New Event</h1>
+      </div>
+      
       <Card>
         <CardHeader>
           <CardTitle>Event Details</CardTitle>
@@ -198,7 +206,7 @@ export default function NewEventPage() {
               <Label htmlFor="description">Description</Label>
               <textarea
                 id="description"
-                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="What's this event about?"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -274,7 +282,7 @@ export default function NewEventPage() {
                   <Button
                     key={tag}
                     type="button"
-                    variant={formData.tags.includes(tag) ? "default" : "outline"}
+                    variant={formData.tags.includes(tag) ? "default" : "outline-solid"}
                     size="sm"
                     onClick={() => handleTagToggle(tag)}
                   >
@@ -289,7 +297,7 @@ export default function NewEventPage() {
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant={formData.visibility === "public" ? "default" : "outline"}
+                  variant={formData.visibility === "public" ? "default" : "outline-solid"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "public" })}
                 >
@@ -297,7 +305,7 @@ export default function NewEventPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant={formData.visibility === "private" ? "default" : "outline"}
+                  variant={formData.visibility === "private" ? "default" : "outline-solid"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "private" })}
                 >
