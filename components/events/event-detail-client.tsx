@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { ensureUserProfileClient } from "@/lib/profile-client";
 import { EventWithDetails } from "@/lib/types/database";
 import { StatusBadge } from "./status-badge";
@@ -59,12 +59,6 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
   };
 
   const handleInterestToggle = async () => {
-    // Redirect to login if not authenticated
-    if (!userId) {
-      router.push('/auth/login');
-      return;
-    }
-
     setIsLoading(true);
     try {
       if (event.status === 'tentative') {
@@ -339,19 +333,28 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
           )}
 
           {!isHost && (
-            <Button
-              className="w-full"
-              onClick={handleInterestToggle}
-              disabled={isLoading}
-              variant={isInterested ? "outline" : "default"}
-            >
-              {!isLoggedIn
-                ? "Log in to Join"
-                : event.status === 'tentative' 
+            !isLoggedIn ? (
+              <SignInButton mode="modal">
+                <Button
+                  className="w-full"
+                  variant="default"
+                >
+                  Log in to Join
+                </Button>
+              </SignInButton>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={handleInterestToggle}
+                disabled={isLoading}
+                variant={isInterested ? "outline" : "default"}
+              >
+                {event.status === 'tentative' 
                   ? (isInterested ? "Remove Interest" : "I'm Interested")
                   : (isInterested ? "Leave Event" : "Join Event")
-              }
-            </Button>
+                }
+              </Button>
+            )
           )}
 
           {isHost && event.status === 'tentative' && event.prospect_count > 0 && (

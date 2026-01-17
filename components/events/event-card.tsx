@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { SignInButton } from "@clerk/nextjs";
 
 interface EventCardProps {
   event: EventWithHost;
@@ -122,19 +123,29 @@ export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventC
           <span>{count} {countLabel}</span>
         </div>
         
-        <Button
-          variant={isInterested ? "default" : "outline"}
-          size="sm"
-          onClick={handleInterestClick}
-          disabled={isLoading}
-        >
-          {!isLoggedIn
-            ? "Log in to Join"
-            : event.status === 'tentative' 
+        {!isLoggedIn ? (
+          <SignInButton mode="modal">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Log in to Join
+            </Button>
+          </SignInButton>
+        ) : (
+          <Button
+            variant={isInterested ? "default" : "outline"}
+            size="sm"
+            onClick={handleInterestClick}
+            disabled={isLoading}
+          >
+            {event.status === 'tentative' 
               ? (isInterested ? "Interested ✓" : "I'm Interested")
               : (isInterested ? "Joined ✓" : "Join Event")
-          }
-        </Button>
+            }
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

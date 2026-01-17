@@ -153,12 +153,6 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
     });
 
   const handleInterestToggle = async (eventId: string, isInterested: boolean) => {
-    // Redirect to login if not authenticated
-    if (!userId) {
-      router.push('/auth/login');
-      return;
-    }
-
     const event = events.find(e => e.id === eventId);
     if (!event) return;
 

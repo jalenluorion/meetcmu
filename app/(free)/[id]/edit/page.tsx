@@ -10,7 +10,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   // Require authentication for editing
   const user = await currentUser();
   if (!user) {
-    redirect("/auth/login");
+    redirect("/" + id);
   }
 
   // Fetch event
