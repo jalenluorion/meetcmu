@@ -243,7 +243,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
                   <Button
                     key={tag}
                     type="button"
-                    variant={formData.tags.includes(tag) ? "default" : "outline-solid"}
+                    variant={formData.tags.includes(tag) ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleTagToggle(tag)}
                   >
@@ -258,7 +258,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant={formData.visibility === "public" ? "default" : "outline-solid"}
+                  variant={formData.visibility === "public" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "public" })}
                 >
@@ -266,7 +266,7 @@ export function EditEventForm({ event: initialEvent }: EditEventFormProps) {
                 </Button>
                 <Button
                   type="button"
-                  variant={formData.visibility === "private" ? "default" : "outline-solid"}
+                  variant={formData.visibility === "private" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "private" })}
                 >

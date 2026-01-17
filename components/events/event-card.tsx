@@ -123,7 +123,7 @@ export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventC
         </div>
         
         <Button
-          variant={isInterested ? "default" : "outline-solid"}
+          variant={isInterested ? "default" : "outline"}
           size="sm"
           onClick={handleInterestClick}
           disabled={isLoading}

@@ -282,7 +282,7 @@ export default function NewEventPage() {
                   <Button
                     key={tag}
                     type="button"
-                    variant={formData.tags.includes(tag) ? "default" : "outline-solid"}
+                    variant={formData.tags.includes(tag) ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleTagToggle(tag)}
                   >
@@ -297,7 +297,7 @@ export default function NewEventPage() {
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant={formData.visibility === "public" ? "default" : "outline-solid"}
+                  variant={formData.visibility === "public" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "public" })}
                 >
@@ -305,7 +305,7 @@ export default function NewEventPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant={formData.visibility === "private" ? "default" : "outline-solid"}
+                  variant={formData.visibility === "private" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFormData({ ...formData, visibility: "private" })}
                 >
