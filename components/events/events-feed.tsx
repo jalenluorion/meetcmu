@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { EventWithHost } from "@/lib/types/database";
 import { EventCard } from "./event-card";
 import { EventFilter, FilterType } from "./event-filter";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { AdvancedFilter, SortBy } from "./advanced-filter";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 interface EventsFeedProps {
   initialEvents: EventWithHost[];
@@ -24,6 +25,8 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
   const [selectedBuilding, setSelectedBuilding] = useState<string | undefined>(undefined);
   const [sortBy, setSortBy] = useState<SortBy>('upcoming');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialEvents.length === 10);
   const router = useRouter();
   const supabase = createClient();
 
@@ -43,114 +46,74 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
     )
   ).sort();
 
-  // Helper function to check if event falls within date and time range filters
-  const isInTimeWindow = (event: EventWithHost, dateFilter?: string, timeRange?: {startHour: number, endHour: number}): boolean => {
-    // If no filters are applied, show all events
-    if (!dateFilter && !timeRange) return true;
-
-    // Check date filter
-    if (dateFilter && event.date_time) {
-      const eventDate = new Date(event.date_time).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: "America/New_York",
-      }).split('/').reverse().join('-').replace(/-(\d)\//g, '-0$1/').replace(/\/(\d)$/g, '/0$1'); // Convert to YYYY-MM-DD
-      if (eventDate !== dateFilter) return false;
-    } else if (dateFilter) {
-      // If date filter is set but event has no date, exclude it
-      return false;
+  // Build query params for API
+  const buildQueryParams = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set('page', page.toString());
+    if (activeFilter !== 'all') params.set('filter', activeFilter);
+    if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
+    if (selectedBuilding) params.set('building', selectedBuilding);
+    if (selectedDate) params.set('date', selectedDate);
+    if (selectedTimeRange) {
+      params.set('startHour', selectedTimeRange.startHour.toString());
+      params.set('endHour', selectedTimeRange.endHour.toString());
     }
+    if (sortBy) params.set('sortBy', sortBy);
+    return params.toString();
+  }, [page, activeFilter, searchQuery, selectedTags, selectedBuilding, selectedDate, selectedTimeRange, sortBy]);
 
-    // Check time range filter
-    if (timeRange && event.date_time) {
-      // Get hour in Eastern timezone
-      const eventStart = new Date(event.date_time);
-      const eventStartHour = parseInt(eventStart.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        hour12: false,
-        timeZone: "America/New_York",
-      }));
-
-      // If event has no end time, check if start time is within range
-      if (!event.end_time) {
-        return eventStartHour >= timeRange.startHour && eventStartHour < timeRange.endHour;
+  // Reset pagination and fetch new data when filters change
+  const resetAndFetch = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      params.set('page', '0');
+      if (activeFilter !== 'all') params.set('filter', activeFilter);
+      if (searchQuery.trim()) params.set('search', searchQuery.trim());
+      if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
+      if (selectedBuilding) params.set('building', selectedBuilding);
+      if (selectedDate) params.set('date', selectedDate);
+      if (selectedTimeRange) {
+        params.set('startHour', selectedTimeRange.startHour.toString());
+        params.set('endHour', selectedTimeRange.endHour.toString());
       }
+      if (sortBy) params.set('sortBy', sortBy);
 
-      // If event has end time, check for any overlap with the time window
-      const eventEnd = new Date(event.end_time);
-      const eventEndHour = parseInt(eventEnd.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        hour12: false,
-        timeZone: "America/New_York",
-      }));
-
-      // Event overlaps with window if: event starts before window ends AND event ends after window starts
-      return eventStartHour < timeRange.endHour && eventEndHour > timeRange.startHour;
+      const response = await fetch(`/api/events?${params.toString()}`);
+      const data = await response.json();
+      
+      if (data.events) {
+        setEvents(data.events);
+        setPage(1);
+        setHasMore(data.hasMore);
+      }
+    } catch (error) {
+      console.error('Error fetching filtered events:', error);
     }
+  }, [activeFilter, searchQuery, selectedTags, selectedBuilding, selectedDate, selectedTimeRange, sortBy]);
 
-    return true;
-  };
-
-  const filteredEvents = events
-    .filter(event => {
-      // Filter by status
-      if (activeFilter !== 'all' && event.status !== activeFilter) {
-        return false;
-      }
+  const fetchMoreEvents = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/events?${buildQueryParams()}`);
+      const data = await response.json();
       
-      // Filter by search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = event.title?.toLowerCase().includes(query);
-        const matchesDescription = event.description?.toLowerCase().includes(query);
-        const matchesLocation = event.location?.toLowerCase().includes(query);
-        const matchesBuilding = event.location_building?.toLowerCase().includes(query);
-        
-        if (!matchesTitle && !matchesDescription && !matchesLocation && !matchesBuilding) {
-          return false;
-        }
-      }
-      
-      // Filter by building
-      if (selectedBuilding && event.location_building !== selectedBuilding) {
-        return false;
-      }
-      
-      // Filter by tags
-      if (selectedTags.length > 0) {
-        const eventTags = event.tags || [];
-        const hasMatchingTag = selectedTags.some(tag => eventTags.includes(tag));
-        if (!hasMatchingTag) {
-          return false;
-        }
-      }
-      
-      // Filter by date and time range
-      if (!isInTimeWindow(event, selectedDate, selectedTimeRange)) {
-        return false;
-      }
-      
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'most_popular') {
-        // Sort by popularity (attendees/prospects count)
-        const countA = a.status === 'tentative' ? a.prospect_count : a.attendee_count;
-        const countB = b.status === 'tentative' ? b.prospect_count : b.attendee_count;
-        return countB - countA; // Descending order (most popular first)
+      if (data.events && data.events.length > 0) {
+        setEvents(prevEvents => [...prevEvents, ...data.events]);
+        setPage(prevPage => prevPage + 1);
+        setHasMore(data.hasMore);
       } else {
-        // Sort by date_time (chronological order - soonest first)
-        if (!a.date_time && !b.date_time) return 0;
-        if (!a.date_time) return 1;
-        if (!b.date_time) return -1;
-
-        const dateA = new Date(a.date_time).getTime();
-        const dateB = new Date(b.date_time).getTime();
-
-        return dateA - dateB;
+        setHasMore(false);
       }
-    });
+    } catch (error) {
+      console.error('Error fetching more events:', error);
+      setHasMore(false);
+    }
+  }, [buildQueryParams]);
+
+  // Reset and fetch when filters change
+  useEffect(() => {
+    resetAndFetch();
+  }, [resetAndFetch]);
 
   const handleInterestToggle = async (eventId: string, isInterested: boolean) => {
     const event = events.find(e => e.id === eventId);
@@ -263,22 +226,38 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
         </div>
       </div>
 
-      {filteredEvents.length === 0 ? (
+      {events.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <p className="text-lg">No upcoming events found.</p>
           <p className="text-sm mt-2">Check back later or be the first to create an event!</p>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {filteredEvents.map((event) => (
-            <EventCard 
-              key={event.id} 
-              event={event} 
-              onInterestToggle={handleInterestToggle}
-              isLoggedIn={!!userId}
-            />
-          ))}
-        </div>
+        <InfiniteScroll
+          dataLength={events.length}
+          next={fetchMoreEvents}
+          hasMore={hasMore}
+          loader={
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          }
+          endMessage={
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">You&apos;ve reached the end of upcoming events!</p>
+            </div>
+          }
+        >
+          <div className="grid gap-4">
+            {events.map((event) => (
+              <EventCard 
+                key={event.id} 
+                event={event} 
+                onInterestToggle={handleInterestToggle}
+                isLoggedIn={!!userId}
+              />
+            ))}
+          </div>
+        </InfiniteScroll>
       )}
     </div>
   );

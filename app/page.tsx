@@ -16,7 +16,9 @@ export default async function HomePage() {
   const supabase = await createClient();
   const user = await currentUser();
 
-  // Fetch all events with host information and counts, sorted by date_time
+  const INITIAL_EVENTS_COUNT = 10;
+
+  // Fetch initial batch of events with host information and counts, sorted by date_time
   const { data: events, error } = await supabase
     .from('events')
     .select(`
@@ -30,25 +32,60 @@ export default async function HomePage() {
     `)
     .eq('visibility', 'public')
     .gte('date_time', new Date().toISOString())
-    .order('date_time', { ascending: true, nullsFirst: false });
+    .order('date_time', { ascending: true, nullsFirst: false })
+    .range(0, INITIAL_EVENTS_COUNT - 1);
 
   if (error) {
     console.error('Error fetching events:', error);
     return <div>Error loading events</div>;
   }
 
-  // Fetch prospect counts
+  if (!events || events.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <nav className="w-full border-b border-b-foreground/10 h-16">
+          <div className="w-full max-w-5xl mx-auto flex justify-between items-center p-3 px-5">
+            <Link href="/" className="font-bold text-xl">
+              MeetCMU
+            </Link>
+            <div className="flex gap-3 items-center">
+              <SignedIn>
+                <Button asChild size="sm">
+                  <Link href="/new">
+                    <Plus className="h-4 w-4 mr-1" />
+                    New Event
+                  </Link>
+                </Button>
+              </SignedIn>
+              <div className="flex gap-3 items-center">
+                {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
+                <ThemeSwitcher />
+              </div>
+            </div>
+          </div>
+        </nav>
+        <main className="flex-1 w-full max-w-5xl mx-auto p-5">
+          <EventsFeed initialEvents={[]} userId={user?.id} />
+        </main>
+      </div>
+    );
+  }
+
+  // Fetch prospect counts for initial events
+  const eventIds = events.map(e => e.id);
   const { data: prospectCounts } = await supabase
     .from('event_prospects')
-    .select('event_id, user_id');
+    .select('event_id, user_id')
+    .in('event_id', eventIds);
 
-  // Fetch attendee counts
+  // Fetch attendee counts for initial events
   const { data: attendeeCounts } = await supabase
     .from('event_attendees')
-    .select('event_id, user_id');
+    .select('event_id, user_id')
+    .in('event_id', eventIds);
 
   // Combine the data
-  const eventsWithDetails = events?.map(event => {
+  const eventsWithDetails = events.map(event => {
     const prospects = prospectCounts?.filter(p => p.event_id === event.id) || [];
     const attendees = attendeeCounts?.filter(a => a.event_id === event.id) || [];
     
@@ -59,7 +96,7 @@ export default async function HomePage() {
       user_is_prospect: user ? prospects.some(p => p.user_id === user.id) : false,
       user_is_attendee: user ? attendees.some(a => a.user_id === user.id) : false,
     };
-  }) || [];
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
