@@ -110,10 +110,13 @@ export function BuildingInput({
   const handleBuildingInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchValue(value);
-    onBuildingChange(value);
-    if (!selectedBuilding) {
-      setShowDropdown(true);
+    // Only update the parent if it's an exact match to a building
+    if (CMU_BUILDINGS.includes(value)) {
+      onBuildingChange(value);
+    } else {
+      onBuildingChange("");
     }
+    setShowDropdown(true);
   };
 
   const handleBuildingSelect = (building: string) => {
