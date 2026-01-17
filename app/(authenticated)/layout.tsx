@@ -1,5 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -11,13 +9,6 @@ export default async function AuthenticatedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  
-  if (!data?.user) {
-    redirect("/auth/login");
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="w-full border-b border-b-foreground/10 h-16">

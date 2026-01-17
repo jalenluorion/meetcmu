@@ -3,9 +3,9 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Profiles table (extends auth.users)
+-- Profiles table (for Clerk users)
 CREATE TABLE IF NOT EXISTS profiles (
-  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  id TEXT PRIMARY KEY, -- Clerk user IDs are strings, not UUIDs
   email TEXT NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Events table
 CREATE TABLE IF NOT EXISTS events (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  host_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  host_id TEXT REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   date_time TIMESTAMP WITH TIME ZONE,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS event_prospects (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   event_id UUID REFERENCES events(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(event_id, user_id)
 );
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS event_prospects (
 CREATE TABLE IF NOT EXISTS event_attendees (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   event_id UUID REFERENCES events(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(event_id, user_id)
 );
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS event_attendees (
 -- Notifications table
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   event_id UUID REFERENCES events(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('prospect_joined', 'event_official', 'event_updated', 'event_cancelled')),
   message TEXT NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE TABLE IF NOT EXISTS event_messages (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   event_id UUID REFERENCES events(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   message TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -167,26 +167,8 @@ CREATE POLICY "Interested users can send messages" ON event_messages
     )
   );
 
--- Function to automatically create profile on user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, full_name, avatar_url)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to create profile on signup
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+-- Note: Profile creation is now handled by the application using Clerk webhooks or on-demand creation
+-- The old Supabase auth trigger has been removed since we're using Clerk for authentication
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

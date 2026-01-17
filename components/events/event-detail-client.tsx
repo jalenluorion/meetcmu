@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { ensureUserProfileClient } from "@/lib/profile-client";
 import { EventWithDetails } from "@/lib/types/database";
 import { StatusBadge } from "./status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, MapPin, Users, Trash2, Edit } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EventChat } from "./event-chat";
 
 interface EventDetailClientProps {
@@ -21,6 +23,7 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const { user } = useUser();
   const isLoggedIn = !!userId;
   const isHost = userId ? event.host_id === userId : false;
   const isInterested = event.user_is_prospect || event.user_is_attendee;
@@ -79,6 +82,11 @@ export function EventDetailClient({ event: initialEvent, userId }: EventDetailCl
             prospects: event.prospects.filter(p => p.id !== userId),
           });
         } else {
+          // Ensure user profile exists before adding to prospects
+          if (userId && user) {
+            await ensureUserProfileClient(user);
+          }
+
           await supabase
             .from('event_prospects')
             .insert({ event_id: event.id, user_id: userId });

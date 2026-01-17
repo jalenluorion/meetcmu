@@ -1,13 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { EventDetailClient } from "@/components/events/event-detail-client";
+import { currentUser } from "@clerk/nextjs/server";
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
   // Get current user (may be null for logged out users)
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
 
   // Fetch event with host
   const { data: event, error } = await supabase

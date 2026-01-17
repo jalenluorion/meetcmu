@@ -1,13 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import { EditEventForm } from "@/components/events/edit-event-form";
+import { currentUser } from "@clerk/nextjs/server";
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
   // Require authentication for editing
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) {
     redirect("/auth/login");
   }

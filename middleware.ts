@@ -1,9 +1,23 @@
 import { updateSession } from "@/lib/supabase/middleware";
-import { type NextRequest } from "next/server";
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  return await updateSession(request);
-}
+const isAuthProtected = createRouteMatcher([
+  '/new(.*)',
+  '/profile(.*)',
+])
+
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth();
+  
+  // Protect authenticated routes
+  if (isAuthProtected(req) && !userId) {
+    return NextResponse.redirect(new URL('/sign-in', req.url));
+  }
+  
+  // Run Supabase middleware after Clerk
+  return await updateSession(req);
+})
 
 export const config = {
   matcher: [

@@ -3,19 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
+import { currentUser } from "@clerk/nextjs/server";
+import { ensureUserProfile } from "@/lib/profile";
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
 
-  // Get profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  // Ensure profile exists and get it
+  const profile = await ensureUserProfile();
+  if (!profile) return null;
+
+  const supabase = await createClient();
 
   // Get hosted events
   const { data: hostedEvents } = await supabase
@@ -66,14 +65,14 @@ export default async function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarImage src={user.imageUrl || undefined} />
               <AvatarFallback className="text-2xl">
-                {getInitials(profile?.full_name || null, profile?.email || '')}
+                {getInitials(user.fullName, user.emailAddresses[0]?.emailAddress || '')}
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle>{profile?.full_name || profile?.email}</CardTitle>
-              <CardDescription>{profile?.email}</CardDescription>
+              <CardTitle>{user.fullName || user.emailAddresses[0]?.emailAddress}</CardTitle>
+              <CardDescription>{user.emailAddresses[0]?.emailAddress}</CardDescription>
             </div>
           </div>
         </CardHeader>

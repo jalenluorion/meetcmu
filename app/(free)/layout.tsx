@@ -1,18 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  SignedIn,
+} from '@clerk/nextjs'
 
 export default async function NormalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="w-full border-b border-b-foreground/10 h-16">
@@ -21,14 +20,14 @@ export default async function NormalLayout({
             MeetCMU
           </Link>
           <div className="flex gap-3 items-center">
-            {user && (
+            <SignedIn>
               <Button asChild size="sm">
                 <Link href="/new">
                   <Plus className="h-4 w-4 mr-1" />
                   New Event
                 </Link>
               </Button>
-            )}
+            </SignedIn>
             <div className="flex gap-3 items-center">
               <AuthButton />
               <ThemeSwitcher />

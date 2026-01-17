@@ -7,10 +7,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { EventsFeed } from "@/components/events/events-feed";
 import { Plus } from "lucide-react";
+import {
+  SignedIn,
+} from '@clerk/nextjs'
+import { currentUser } from '@clerk/nextjs/server'
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
 
   // Fetch all events with host information and counts, sorted by date_time
   const { data: events, error } = await supabase
@@ -65,14 +69,14 @@ export default async function HomePage() {
             MeetCMU
           </Link>
           <div className="flex gap-3 items-center">
-            {user && (
+            <SignedIn>
               <Button asChild size="sm">
                 <Link href="/new">
                   <Plus className="h-4 w-4 mr-1" />
                   New Event
                 </Link>
               </Button>
-            )}
+            </SignedIn>
             <div className="flex gap-3 items-center">
               {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
               <ThemeSwitcher />

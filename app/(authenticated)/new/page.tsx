@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@clerk/nextjs";
+import { ensureUserProfileClient } from "@/lib/profile-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +31,7 @@ const COMMON_TAGS = [
 export default function NewEventPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -83,8 +86,10 @@ export default function NewEventPage() {
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+
+      // Ensure user profile exists before creating event
+      await ensureUserProfileClient(user);
 
       // Validate that start and end times are on the same date (in Eastern timezone)
       if (formData.date_time && formData.end_time) {
