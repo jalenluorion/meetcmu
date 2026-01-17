@@ -65,7 +65,7 @@ export function EventCard({ event, onInterestToggle, isLoggedIn = true }: EventC
   return (
     <Card 
       className={`cursor-pointer transition-all hover:shadow-md ${
-        event.status === 'tentative' ? 'border-dashed' : ''
+        event.status === 'tentative' ? 'border-dashed opacity-75' : ''
       }`}
       onClick={() => router.push(`/${event.id}`)}
     >
