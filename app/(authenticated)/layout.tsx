@@ -1,35 +1,16 @@
-import Link from "next/link";
-import { AuthButton } from "@/components/auth-button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Navbar } from "@/components/navbar";
+import { currentUser } from '@clerk/nextjs/server';
 
 export default async function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await currentUser();
+  
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="w-full border-b border-b-foreground/10 h-16">
-        <div className="w-full max-w-5xl mx-auto flex justify-between items-center p-3 px-5">
-          <Link href="/" className="font-bold text-xl">
-            MeetCMU
-          </Link>
-          <div className="flex gap-3 items-center">
-            <Button asChild size="sm">
-              <Link href="/new">
-                <Plus className="h-4 w-4 mr-1" />
-                New Event
-              </Link>
-            </Button>
-            <div className="flex gap-3 items-center">
-              <AuthButton />
-              <ThemeSwitcher />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar userId={user?.id} />
       <main className="flex-1 w-full max-w-5xl mx-auto p-5">
         {children}
       </main>

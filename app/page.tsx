@@ -1,16 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { AuthButton } from "@/components/auth-button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { hasEnvVars } from "@/lib/utils";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { EventsFeed } from "@/components/events/events-feed";
-import { Plus } from "lucide-react";
-import {
-  SignedIn,
-} from '@clerk/nextjs'
-import { currentUser } from '@clerk/nextjs/server'
+import { currentUser } from '@clerk/nextjs/server';
+import { Navbar } from "@/components/navbar";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -63,27 +54,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="w-full border-b border-b-foreground/10 h-16">
-        <div className="w-full max-w-5xl mx-auto flex justify-between items-center p-3 px-5">
-          <Link href="/" className="font-bold text-xl">
-            MeetCMU
-          </Link>
-          <div className="flex gap-3 items-center">
-            <SignedIn>
-              <Button asChild size="sm">
-                <Link href="/new">
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Event
-                </Link>
-              </Button>
-            </SignedIn>
-            <div className="flex gap-3 items-center">
-              {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
-              <ThemeSwitcher />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar userId={user?.id} />
       <main className="flex-1 w-full max-w-5xl mx-auto p-5">
         <EventsFeed initialEvents={eventsWithDetails} userId={user?.id} />
       </main>

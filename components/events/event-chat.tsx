@@ -134,6 +134,18 @@ export function EventChat({ eventId, userId, isInterested }: EventChatProps) {
       if (error) throw error;
 
       setNewMessage("");
+
+      // Trigger notification for new message
+      try {
+        await fetch('/api/notifications/trigger-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, senderId: userId }),
+        });
+      } catch (notifError) {
+        console.error('Error sending notification:', notifError);
+        // Don't fail the message send if notification fails
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message. Please try again.');

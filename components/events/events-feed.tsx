@@ -156,6 +156,8 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
     const event = events.find(e => e.id === eventId);
     if (!event) return;
 
+    const previousCount = event.status === 'tentative' ? event.prospect_count : event.attendee_count;
+
     try {
       if (event.status === 'tentative') {
         // Handle prospects
@@ -166,12 +168,29 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
           
           if (error) throw error;
 
+          const newCount = event.prospect_count + 1;
+
           // Update local state
           setEvents(events.map(e => 
             e.id === eventId 
-              ? { ...e, user_is_prospect: true, prospect_count: e.prospect_count + 1 }
+              ? { ...e, user_is_prospect: true, prospect_count: newCount }
               : e
           ));
+
+          // Trigger milestone notification
+          try {
+            await fetch('/api/notifications/trigger-milestone', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                eventId, 
+                currentCount: newCount, 
+                previousCount 
+              }),
+            });
+          } catch (notifError) {
+            console.error('Error sending milestone notification:', notifError);
+          }
         } else {
           const { error } = await supabase
             .from('event_prospects')
@@ -197,12 +216,29 @@ export function EventsFeed({ initialEvents, userId }: EventsFeedProps) {
           
           if (error) throw error;
 
+          const newCount = event.attendee_count + 1;
+
           // Update local state
           setEvents(events.map(e => 
             e.id === eventId 
-              ? { ...e, user_is_attendee: true, attendee_count: e.attendee_count + 1 }
+              ? { ...e, user_is_attendee: true, attendee_count: newCount }
               : e
           ));
+
+          // Trigger milestone notification
+          try {
+            await fetch('/api/notifications/trigger-milestone', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                eventId, 
+                currentCount: newCount, 
+                previousCount 
+              }),
+            });
+          } catch (notifError) {
+            console.error('Error sending milestone notification:', notifError);
+          }
         } else {
           const { error } = await supabase
             .from('event_attendees')
